@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="10"> 
+    <link rel="stylesheet" href="{% static 'dashboard3.css' %}">
+    <title>Dashboard-app</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="dashboard-securite">
+    <div class="line-cart">
+      <div class="pluie">Pluie</div>
+      <canvas id="pluieChart"></canvas>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="date">Date</div>
+        <div class="_21-feb-2025" id="currentDate">{{ current_date }}</div>
+        <div class="morning" id="timeOfDay">{{ time_of_day }}</div>
+      </div>
+      <div class="card2">
+        <div class="flamme">FLAMME</div>
+        <div class="non-detecte" id="flammeStatus">{{ flame_status }}</div>
+      </div>
+      <div class="card3" id="statusCard">
+        
+      </div>
+    </div>
+    
+    <div class="segmented-control">
+      <div class="item-1">
+        <div class="plantes"><a href="{%url 'dashboard1'%}">Plantes</a></div>
+      </div>
+      <div class="item-2">
+        <div class="serre"><a href="{%url 'dashboard2'%}">Serre</a></div>
+      </div>
+      <div class="item-3">
+        <div class="securit">Securité</div>
+      </div>
+      <div class="item-6">
+        <div class="etable"><a href="{%url 'dashboard4'%}">Etable</a></div>
+      </div>
+      <div class="item-7">
+        <div class="l-eau"><a href="{%url 'dashboard5'%}">L'eau</a></div>
+      </div>
+    </div>
+    
+    <div class="navigation">
+      <div class="dashboard-app">Dashboard app</div>
+    </div>
+    
+    <div class="line-cart2">
+      <div class="temperature">Temperature</div>
+      <canvas id="temperatureChart"></canvas>
+    </div>
+    
+    <script>
+      // Initialize empty charts with placeholder data
+      var ctxPluie = document.getElementById('pluieChart').getContext('2d');
+      var pluieChart = new Chart(ctxPluie, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Pluie',
+            data: [],
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+            tension: 0.4
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          responsive: true
+        }
+      });
+      
+      var ctxTemperature = document.getElementById('temperatureChart').getContext('2d');
+      var temperatureChart = new Chart(ctxTemperature, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Temperature',
+            data: [],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+            tension: 0.4
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          responsive: true
+        }
+      });
+      
+      // Function to update the dashboard with real-time data
+      function updateDashboard() {
+        fetch('/get_dashboard3_data/')
+          .then(response => response.json())
+          .then(data => {
+              // Update temperature value
+              if (data.temp_latest !== undefined) {
+                  document.getElementById("tempValue").innerText = data.temp_latest + " °C";
+              }
+              
+              // Update flame status with appropriate color
+              const flammeStatus = document.getElementById("flammeStatus");
+              flammeStatus.innerText = data.flame_status;
+              
+              // Update card3 color based on flame status
+              const statusCard = document.getElementById("statusCard");
+              const statusIndicator = document.getElementById("statusIndicator");
+              
+              if (data.flame_status === 'Detecte' || data.flame_status === 'détecté') {
+                  flammeStatus.classList.remove('non-detecte');
+                  flammeStatus.classList.add('detecte');
+                  
+                  // Change card3 to danger mode
+                  statusCard.classList.remove('safe');
+                  statusCard.classList.add('danger');
+                  statusIndicator.innerText = "Statut: ALERTE";
+              } else {
+                  flammeStatus.classList.remove('detecte');
+                  flammeStatus.classList.add('non-detecte');
+                  
+                  // Change card3 to safe mode
+                  statusCard.classList.remove('danger');
+                  statusCard.classList.add('safe');
+                  statusIndicator.innerText = "Statut: Normal";
+              }
+
+              // Update date and time
+              const now = new Date();
+              document.getElementById("currentDate").innerText = now.toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+              });
+              
+              const hour = now.getHours();
+              let timeOfDay;
+              if (hour >= 5 && hour < 12) {
+                  timeOfDay = "Morning";
+              } else if (hour >= 12 && hour < 18) {
+                  timeOfDay = "Afternoon";
+              } else {
+                  timeOfDay = "Evening";
+              }
+              document.getElementById("timeOfDay").innerText = timeOfDay;
+
+              // Update temperature chart
+              if (data.temp_data && data.temp_data.length > 0) {
+                  temperatureChart.data.labels = data.temp_data.map(item => item.time);
+                  temperatureChart.data.datasets[0].data = data.temp_data.map(item => item.value);
+                  temperatureChart.update();
+              }
+
+              // Update rain chart
+              if (data.pluie_data && data.pluie_data.length > 0) {
+                  pluieChart.data.labels = data.pluie_data.map(item => item.time);
+                  pluieChart.data.datasets[0].data = data.pluie_data.map(item => item.value);
+                  pluieChart.update();
+              }
+          })
+          .catch(error => console.error("Erreur lors de la mise à jour :", error));
+      }
+
+      // Initialize card state based on initial data
+      const initialFlameStatus = document.getElementById("flammeStatus").innerText;
+      const statusCard = document.getElementById("statusCard");
+      const statusIndicator = document.getElementById("statusIndicator");
+      
+      if (initialFlameStatus === 'Detecte' || initialFlameStatus === 'détecté') {
+          statusCard.classList.add('danger');
+          statusIndicator.innerText = "Statut: ALERTE";
+      } else {
+          statusCard.classList.add('safe');
+          statusIndicator.innerText = "Statut: Normal";
+      }
+
+      // Update immediately and then every 5 seconds
+      updateDashboard();
+      setInterval(updateDashboard, 5000);
+    </script>
+
+  </body>
+</html>

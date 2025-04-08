@@ -1,0 +1,148 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'dashboard1.css' %}">
+    <meta http-equiv="refresh" content="10"> 
+    <title>Dashboard App</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+
+<div class="dashboard-plante">
+    <div class="cards">
+      <div class="card">
+        <div class="pompe-de-l-eau">Pompe de l'eau</div>
+        <div class="switch">
+          <label class="toggle-switch">
+            <input type="checkbox" id="relaySwitch">
+            <span class="slider"></span>
+        </label>
+        <script>
+            document.getElementById("relaySwitch").addEventListener("change", function() {
+                let status = this.checked ? "ON" : "OFF";
+
+                fetch("/sensor/control-relay/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({ status: status })
+                }).then(response => response.json())
+                  .then(data => console.log(data))
+                  .catch(error => console.error("Error:", error));
+            });
+            </script>
+            
+          <div class="ellipse-2"></div>
+  
+      </div>
+    </div>
+
+      <div class="card2">
+        <div class="status">status</div>
+        <div class="_34">{{humidite_sol_1}}%</div>
+        <script>
+          function updateHumidity() {
+              fetch('/get_humidite_sol_1/')
+              .then(response => response.json())
+              .then(data => {
+                  document.getElementById("humiditeValue").innerText = data.humidite_sol_1 + "%";
+              })
+              .catch(error => console.error("Erreur lors de la mise à jour :", error));
+          }
+        
+          setInterval(updateHumidity, 5000);
+          updateHumidity();  // Mise à jour initiale
+        </script>
+
+      </div>
+      <div class="card3"></div>
+    </div>
+
+    <div class="segmented-control">
+      <div class="item-1">
+          <div class="plantes">Plantes</a></div>
+      </div>
+      <div class="item-2">
+          <div class="serre"><a href="{% url 'dashboard2' %}">Serre</a></div>
+      </div>
+      <div class="item-3">
+          <div class="securite"><a href="{%url 'dashboard3' %}">Sécurité</a></div>
+      </div>
+      <div class="item-6">
+          <div class="etable"><a href="{%url 'dashboard4'%}">Étable</a></div>
+      </div>
+      <div class="item-7">
+          <div class="l-eau"><a href="{%url 'dashboard5'%}">L’eau</a></div>
+      </div>
+  </div>
+    <div class="navigation">
+      <div class="dashboard-app">Dashboard app</div>
+    </div>
+    <div class="line-cart">
+      <div class="temperature">Humidité du sol</div>
+      <canvas id="humiditeChart"></canvas>
+      <script>
+        var ctxhumidite = document.getElementById('humiditeChart').getContext('2d');
+        var humiditeChart = new Chart(ctxhumidite, {
+            type: 'line',
+            data: {
+                labels: [],  // Remplir avec les données 'times'
+                datasets: [{
+                    label: 'Humidité du sol',
+                    data: [],  // Remplir avec les données 'values'
+                    borderColor: 'blue',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Humidité (%)'
+                        }
+                    }
+                }
+            }
+        });
+    
+        function updateGraph() {
+            fetch('/get_humidite_sol_1/')
+                .then(response => response.json())
+                .then(data => {
+                    humiditeChart.data.labels = data.times;  // Assurez-vous que ces données existent
+                    humiditeChart.data.datasets[0].data = data.values;  // Assurez-vous que ces données existent
+                    humiditeChart.update();
+                })
+                .catch(error => console.error("Erreur lors de la mise à jour :", error));
+        }
+    
+        // Rafraîchir le graphique toutes les 5 secondes
+        setInterval(updateGraph, 5000);
+        updateGraph();  // Mise à jour initiale
+    </script>
+    
+    </div>
+
+  
+</div>
+
+  
+    
+</body>
+</html> 

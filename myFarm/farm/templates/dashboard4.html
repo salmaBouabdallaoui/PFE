@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'dashboard4.css' %}">
+    <meta http-equiv="refresh" content="10"> 
+    <title>Dashboard-app</title>
+</head>
+<body>
+
+<div class="dashboard-etable">
+    <div class="cards">
+      <div class="card">
+        <div class="date">Date</div>
+        <div class="_21-feb-2025" id="currentDate">{{ current_date }}</div>
+        <div class="morning" id="timeOfDay">{{ time_of_day }}</div>
+      </div>
+      <div class="card2">
+        <div class="nourriture">Nourriture</div>
+        <div class="status {% if water_status == 'suffisant' %}status-ok{% else %}status-warning{% endif %}">
+          {{ water_status }}
+        </div>
+      </div>
+    </div>
+    <div class="segmented-control">
+      <div class="item-1">
+        <div class="plantes"><a href="{%url 'dashboard1'%}">Plantes</a></div>
+      </div>
+      <div class="item-2">
+        <div class="serre"><a href="{%url 'dashboard2'%}">Serre</a></div>
+      </div>
+      <div class="item-3">
+        <div class="securit"><a href="{%url 'dashboard3'%}">Securité</a></div>
+      </div>
+      <div class="item-6">
+        <div class="etable">Etable</div>
+      </div>
+      <div class="item-7">
+        <div class="l-eau"><a href="{%url 'dashboard5'%}">L’eau</a></div>
+      </div>
+    </div>
+    <div class="navigation">
+      <div class="dashboard-app">Dashboard app</div>
+    </div>
+  </div>
+    
+</body>
+</html>
